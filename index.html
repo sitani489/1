@@ -1,19 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>Lettuce Link</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 할 일 관리 - 삭제 기능 버전</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Malgun Gothic', sans-serif;
+            padding-top: 50px;
+            background-color: #f9f9f9;
+        }
+        #todo-input {
+            width: 350px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: none;
+            display: block;
+            margin: 0 auto 15px auto;
+        }
+        #add-button {
+            width: 378px;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #todo-list {
+            list-style: none;
+            padding: 0;
+            width: 378px;
+            margin: 30px auto;
+            text-align: left;
+        }
+
+        /* 기본 할 일 스타일 */
+        #todo-list li {
+            padding: 12px;
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            /* ★ 중요: 글자와 삭제 버튼을 양 끝으로 배치합니다 */
+            justify-content: space-between; 
+        }
+
+        /* 체크박스와 텍스트를 감싸는 왼쪽 정렬용 박스 */
+        .todo-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 완료된 할 일 스타일 */
+        #todo-list li.completed .todo-text {
+            text-decoration: line-through;
+            color: #aaaaaa;
+        }
+        #todo-list li.completed {
+            background-color: #f2f2f2;
+        }
+
+        /* ★ 삭제 버튼 스타일 */
+        .delete-button {
+            background: none;
+            border: none;
+            color: #ff4d4d;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 5px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .delete-button:hover {
+            background-color: #ffe6e6; /* 마우스 올리면 살짝 빨개짐 */
+        }
+    </style>
 </head>
 <body>
-    <a href="https://www.youtube.com/@%EC%B9%B4%EC%9A%B4%ED%84%B0" target="_blank">Lettuce</a>
+
+    <h1>나의 할 일 관리</h1>
+    
+    <textarea id="todo-input" placeholder="할 일을 엔터로 구분해서 입력해보세요..." rows="4"></textarea>
+    <button id="add-button">일괄 추가하기</button>
+
+    <ul id="todo-list"></ul>
+
+    <script>
+        const addButton = document.getElementById('add-button');
+        const todoInput = document.getElementById('todo-input');
+        const todoList = document.getElementById('todo-list');
+
+        addButton.addEventListener('click', function() {
+            const rawText = todoInput.value;
+            const lines = rawText.split('\n');
+            let addedCount = 0;
+
+            lines.forEach(function(line) {
+                const todoText = line.trim();
+                
+                if (todoText !== "") {
+                    // 1. 전체를 감싸는 <li> 태그 생성
+                    const newTodoItem = document.createElement('li');
+                    
+                    // 2. 왼쪽 영역(체크박스 + 글자)을 감싸는 div 생성
+                    const contentWrapper = document.createElement('div');
+                    contentWrapper.className = 'todo-content';
+                    
+                    // 3. 체크박스 생성
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    
+                    // 4. 글자를 담을 span 생성
+                    const textSpan = document.createElement('span');
+                    textSpan.className = 'todo-text';
+                    textSpan.textContent = todoText;
+                    
+                    // 5. 오른쪽 영역에 들어갈 삭제 버튼(X) 생성
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-button';
+                    deleteButton.textContent = '×'; // 곱하기 기호(X모양)
+                    
+                    // 왼쪽 영역 조립
+                    contentWrapper.appendChild(checkbox);
+                    contentWrapper.appendChild(textSpan);
+                    
+                    // <li> 태그 안에 왼쪽 영역과 오른쪽 삭제 버튼 넣기
+                    newTodoItem.appendChild(contentWrapper);
+                    newTodoItem.appendChild(deleteButton);
+                    
+                    // [기능 1] 할 일을 클릭했을 때 완료 토글
+                    newTodoItem.addEventListener('click', function() {
+                        newTodoItem.classList.toggle('completed');
+                        checkbox.checked = newTodoItem.classList.contains('completed');
+                    });
+
+                    // 체크박스 클릭 시 이벤트 꼬임 방지
+                    checkbox.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        newTodoItem.classList.toggle('completed');
+                    });
+
+                    // [기능 2] ★ 삭제 버튼을 클릭했을 때 화면에서 삭제
+                    deleteButton.addEventListener('click', function(e) {
+                        e.stopPropagation(); // 삭제 버튼을 누를 때 완료 처리가 같이 되지 않도록 막음
+                        newTodoItem.remove(); // 화면에서 이 <li> 태그를 완전히 제거
+                    });
+
+                    todoList.appendChild(newTodoItem);
+                    addedCount++;
+                }
+            });
+            
+            if (addedCount > 0) {
+                todoInput.value = "";
+                todoInput.focus();
+            } else {
+                alert("추가할 할 일을 입력해주세요!");
+            }
+        });
+    </script>
 </body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Lettuce Video</title>
-</head>
-<body>
-    <iframe src="https://youtu.be/--BZrvi-7Dw?si=3KIP1MuzsZZLTfuj" width="640" height="360"></iframe>
-</body>
-</html>
 </html>
